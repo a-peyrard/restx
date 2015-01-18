@@ -8,7 +8,6 @@ import restx.factory.When;
  * @author apeyrard
  */
 @Alternative(to = ModestWhoIsTheBest.class)
-@Named("who.is.the.best")
 @When(name = "restx.mood", value = "megalomaniac")
 public class MegalomaniacWhoIsTheBest extends ModestWhoIsTheBest {
 	@Override
