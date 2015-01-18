@@ -1,14 +1,14 @@
 package samplest.alternative;
 
-import com.sun.javafx.sg.PGShape;
-
+import javax.inject.Named;
 import restx.factory.Alternative;
 import restx.factory.When;
 
 /**
  * @author apeyrard
  */
-@Alternative(to = WhoIsTheBest.class)
+@Alternative(to = ModestWhoIsTheBest.class)
+@Named("who.is.the.best")
 @When(name = "restx.mood", value = "megalomaniac")
 public class MegalomaniacWhoIsTheBest extends ModestWhoIsTheBest {
 	@Override

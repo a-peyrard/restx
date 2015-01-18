@@ -22,12 +22,14 @@ public class WhoIsTheBestTest {
 		Factory factory = Factory.builder().addFromServiceLoader().build();
 //		String greet = factory.getComponent(WhoIsTheBest.class).answer();
 		String greet = factory.getComponent(ModestWhoIsTheBest.class).answer();
+		System.out.println(greet);
 		assertThat(greet).isEqualTo("you");
 
 		System.setProperty("restx.mood", "megalomaniac");
 		factory = Factory.builder().addFromServiceLoader().build();
 //		greet = factory.getComponent(WhoIsTheBest.class).answer();
 		greet = factory.getComponent(ModestWhoIsTheBest.class).answer();
-		assertThat(greet).isEqualTo("you");
+		System.out.println(greet);
+		assertThat(greet).isEqualTo("me");
 	}
 }
