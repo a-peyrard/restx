@@ -8,6 +8,7 @@ import com.google.common.base.Optional;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Set;
 import restx.factory.TestComponentPriorities.V;
 
 /**
@@ -86,5 +87,17 @@ public class FactoryTest {
                 .build();
 
         factory.queryByName(Name.of(String.class, "mandatory.dep.result2")).findOne();
+    }
+
+    @Test
+    public void should_permit_to_force_component_produced_class() {
+        Factory factory = Factory.builder().addFromServiceLoader().build();
+
+        TestGreeting component = factory.getComponent(TestGreeting.class);
+        assertThat(component.greet()).isEqualTo("hello");
+
+        Optional<NamedComponent<TestGreeting>> one = factory.queryByClass(TestGreeting.class).findOne();
+        assertThat(one.isPresent());
+        assertThat(one.get().getName().getClazz()).isEqualTo(TestGreeting.class);
     }
 }
