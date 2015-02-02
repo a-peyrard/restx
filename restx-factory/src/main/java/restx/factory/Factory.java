@@ -329,7 +329,7 @@ public class Factory implements AutoCloseable {
                         factory.nameBuildableComponents(machine, ComponentCustomizerEngine.class);
                 for (Name<ComponentCustomizerEngine> name : names) {
                     Optional<NamedComponent<ComponentCustomizerEngine>> customizer =
-                            factory.buildAndStore(Query.byName(name), machine.getEngine(name));
+                            factory.buildAndStore(Query.byName(name), machine.getEngine(name), true);
                     componentCustomizerEngines.add(customizer.get().getComponent());
                 }
             }
@@ -347,7 +347,7 @@ public class Factory implements AutoCloseable {
                 for (Name<FactoryMachine> name : names) {
                     MachineEngine<FactoryMachine> engine = machine.getEngine(name);
                     try {
-                        machines.add(factory.buildAndStore(Query.byName(name), engine).get().getComponent());
+                        machines.add(factory.buildAndStore(Query.byName(name), engine, false).get().getComponent());
                     } catch (UnsatisfiedDependenciesException e) {
                         moreToBuild.put(name, engine);
                         notSatisfied = notSatisfied.concat(e.getUnsatisfiedDependencies().prepend(
@@ -358,7 +358,7 @@ public class Factory implements AutoCloseable {
 
             for (Map.Entry<Name<FactoryMachine>, MachineEngine<FactoryMachine>> entry : new ArrayList<>(toBuild.entrySet())) {
                 try {
-                    machines.add(factory.buildAndStore(Query.byName(entry.getKey()), entry.getValue()).get().getComponent());
+                    machines.add(factory.buildAndStore(Query.byName(entry.getKey()), entry.getValue(), false).get().getComponent());
                     toBuild.remove(entry.getKey());
                 } catch (UnsatisfiedDependenciesException e) {
                     notSatisfied = notSatisfied.concat(e.getUnsatisfiedDependencies().prepend(
@@ -601,7 +601,7 @@ public class Factory implements AutoCloseable {
             }
 
             for (MachineEngine<T> engine : factory().findAllEnginesFor(name)) {
-                Optional<NamedComponent<T>> namedComponent = factory().buildAndStore(this, engine);
+                Optional<NamedComponent<T>> namedComponent = factory().buildAndStore(this, engine, true);
                 if (namedComponent.isPresent()) {
                     return namedComponent;
                 }
@@ -1055,7 +1055,7 @@ public class Factory implements AutoCloseable {
         return buildableNames;
     }
 
-    private <T> Optional<NamedComponent<T>> buildAndStore(Query<T> query, MachineEngine<T> engine) {
+    private <T> Optional<NamedComponent<T>> buildAndStore(Query<T> query, MachineEngine<T> engine, boolean store) {
         Name<T> name = engine.getName();
         if (!checkActive(name)) {
             return Optional.absent();
@@ -1068,7 +1068,7 @@ public class Factory implements AutoCloseable {
         logger.info("{} - dependencies closure for {} is: {}", id, name, dependencies);
         satisfyBoms(dependencies);
 
-        return buildAndStore(buildingBox);
+        return buildAndStore(buildingBox, store);
     }
 
     private Deque<BuildingBox<?>> buildBuildingBoxesClosure(BuildingBox<?> buildingBox) {
@@ -1172,7 +1172,7 @@ public class Factory implements AutoCloseable {
                     Collection<Name<?>> names = buildingBox.names.get(key);
                     Set<NamedComponent<?>> components = Sets.newTreeSet(NAMED_COMPONENT_COMPARATOR);
                     for (Name<?> name : names) {
-                        uncheckedAddIfPresent(components, buildAndStore(getDependencyBuildingBox(buildingBox.deps, name)));
+                        uncheckedAddIfPresent(components, buildAndStore(getDependencyBuildingBox(buildingBox.deps, name), true));
                     }
                     materials.putAll(key, components);
                 }
@@ -1181,7 +1181,7 @@ public class Factory implements AutoCloseable {
         }
     }
 
-    private <T> Optional<NamedComponent<T>> buildAndStore(BuildingBox<T> buildingBox) {
+    private <T> Optional<NamedComponent<T>> buildAndStore(BuildingBox<T> buildingBox, boolean store) {
         Name<T> name = buildingBox.engine.getName();
         if (buildingBox == null) {
             throw new IllegalStateException("problem with dependency resolution" +
@@ -1202,7 +1202,7 @@ public class Factory implements AutoCloseable {
                     " order " + buildingBox.engine.getBillOfMaterial() + " for " + name + " not yet satisfied");
         }
 
-        namedComponent = buildAndStore(name, buildingBox.engine, satisfiedBOM);
+        namedComponent = buildAndStore(name, buildingBox.engine, satisfiedBOM, store);
         // this may be absent if engine creates an absent component
         if (namedComponent.isPresent()) {
             buildingBox.component = namedComponent.get();
@@ -1210,7 +1210,7 @@ public class Factory implements AutoCloseable {
         return namedComponent;
     }
 
-    private <T> Optional<NamedComponent<T>> buildAndStore(Name<T> name, MachineEngine<T> engine, SatisfiedBOM satisfiedBOM) {
+    private <T> Optional<NamedComponent<T>> buildAndStore(Name<T> name, MachineEngine<T> engine, SatisfiedBOM satisfiedBOM, boolean store) {
         logger.info("{} - building {} with {} / {}", id, name, engine, satisfiedBOM);
         Timer timer = metrics.timer("<BUILD> " + name.getSimpleName());
         Monitor monitor = timer.time();
@@ -1245,8 +1245,11 @@ public class Factory implements AutoCloseable {
             }
         }
 
-        warehouse.checkIn(box, satisfiedBOM);
-        return warehouse.checkOut(box.getName());
+        if (store) {
+            warehouse.checkIn(box, satisfiedBOM);
+            return warehouse.checkOut(box.getName());
+        }
+        return box.pick();
     }
 
     private Iterable<ComponentCustomizerEngine> customizerEngines() {
