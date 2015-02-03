@@ -347,7 +347,11 @@ public class Factory implements AutoCloseable {
                 for (Name<FactoryMachine> name : names) {
                     MachineEngine<FactoryMachine> engine = machine.getEngine(name);
                     try {
-                        machines.add(factory.buildAndStore(Query.byName(name), engine, false).get().getComponent());
+                        FactoryMachine factoryMachine = factory.buildAndStore(Query.byName(name), engine, false).get().getComponent();
+                        if (factoryMachine != NoopFactoryMachine.INSTANCE) {
+                            // only store real machines
+                            machines.add(factoryMachine);
+                        }
                     } catch (UnsatisfiedDependenciesException e) {
                         moreToBuild.put(name, engine);
                         notSatisfied = notSatisfied.concat(e.getUnsatisfiedDependencies().prepend(
@@ -358,7 +362,11 @@ public class Factory implements AutoCloseable {
 
             for (Map.Entry<Name<FactoryMachine>, MachineEngine<FactoryMachine>> entry : new ArrayList<>(toBuild.entrySet())) {
                 try {
-                    machines.add(factory.buildAndStore(Query.byName(entry.getKey()), entry.getValue(), false).get().getComponent());
+                    FactoryMachine factoryMachine = factory.buildAndStore(Query.byName(entry.getKey()), entry.getValue(), false).get().getComponent();
+                    if (factoryMachine != NoopFactoryMachine.INSTANCE) {
+                        // only store real machines
+                        machines.add(factoryMachine);
+                    }
                     toBuild.remove(entry.getKey());
                 } catch (UnsatisfiedDependenciesException e) {
                     notSatisfied = notSatisfied.concat(e.getUnsatisfiedDependencies().prepend(
