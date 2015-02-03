@@ -305,20 +305,21 @@ public class Factory implements AutoCloseable {
                slightly less performant but then factory behavior is much more predictable and performant,
                which is better at least in production.
              */
+            StdWarehouse warehouse = new StdWarehouse(ImmutableList.copyOf(providers));
             Factory factory = new Factory(
                     usedServiceLoader, machines, ImmutableList.<ComponentCustomizerEngine>of(),
-                    new StdWarehouse(ImmutableList.copyOf(providers)));
+                    warehouse);
 
             Map<Name<FactoryMachine>, MachineEngine<FactoryMachine>> toBuild = new LinkedHashMap<>();
             ImmutableList<FactoryMachine> factoryMachines = buildFactoryMachines(factory, factory.machines, toBuild);
             while (!factoryMachines.isEmpty()) {
                 machines.putAll("FactoryMachines", factoryMachines);
                 factory = new Factory(usedServiceLoader, machines,
-                        ImmutableList.<ComponentCustomizerEngine>of(), new StdWarehouse());
+                        ImmutableList.<ComponentCustomizerEngine>of(), warehouse);
                 factoryMachines = buildFactoryMachines(factory, factoryMachines, toBuild);
             }
             factory = new Factory(usedServiceLoader, machines,
-                    buildCustomizerEngines(factory), new StdWarehouse(ImmutableList.copyOf(providers)));
+                    buildCustomizerEngines(factory), warehouse);
             return factory;
         }
 
