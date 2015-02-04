@@ -1252,6 +1252,11 @@ public class Factory implements AutoCloseable {
             }
         }
 
+        if (box instanceof DisposableComponentBox) {
+            // don't store disposable boxes
+            return box.pick();
+        }
+
         warehouse.checkIn(box, satisfiedBOM);
         return warehouse.checkOut(box.getName());
     }
