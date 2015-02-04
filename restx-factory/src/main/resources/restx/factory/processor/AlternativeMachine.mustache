@@ -11,7 +11,7 @@ public class {{machine}} extends SingleNameFactoryMachine<FactoryMachine> {
 
     public {{machine}}() {
         super(0, new StdMachineEngine<FactoryMachine>(
-                    Name.of(FactoryMachine.class, "{{componentType}}{{alternativeToComponentType}}Alternative"), 0, BoundlessComponentBox.FACTORY) {
+                    Name.of(FactoryMachine.class, "{{componentType}}{{alternativeToComponentType}}Alternative"), 0, DisposableComponentBox.FACTORY) {
                 private Factory.Query<String> query = Factory.Query.byName(Name.of(String.class, "{{whenName}}")).optional();
 
                 @Override

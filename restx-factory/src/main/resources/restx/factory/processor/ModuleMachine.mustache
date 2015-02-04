@@ -40,7 +40,7 @@ public class {{machine}} extends DefaultFactoryMachine {
 
 {{#alternativesEngines}}
             new StdMachineEngine<FactoryMachine>(
-                    Name.of(FactoryMachine.class, "{{methodName}}{{alternativeToComponentSimpleName}}Alternative"), 0, BoundlessComponentBox.FACTORY) {
+                    Name.of(FactoryMachine.class, "{{methodName}}{{alternativeToComponentSimpleName}}Alternative"), 0, DisposableComponentBox.FACTORY) {
                 private Factory.Query<String> query = Factory.Query.byName(Name.of(String.class, "{{whenName}}")).optional();
 
                 @Override
