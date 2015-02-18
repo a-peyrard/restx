@@ -160,6 +160,7 @@
         <module>restx-specs-shell</module>
         <module>restx-validation</module>
         <module>restx-webjars</module>
+        <module>restx-benchmarks</module>
     </modules>
 
 
