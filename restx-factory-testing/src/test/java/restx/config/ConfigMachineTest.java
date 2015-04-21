@@ -19,6 +19,8 @@ import java.io.File;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static restx.factory.Factory.LocalMachines.overrideComponents;
+import static restx.factory.Factory.LocalMachines.threadLocal;
 
 /**
  * User: xavierhanin
@@ -129,6 +131,7 @@ public class ConfigMachineTest {
 
     @Test
     public void should_load_from_loader() throws Exception {
+
         Factory factory = Factory.builder()
                 .addFromServiceLoader()
                 .build();
@@ -140,6 +143,21 @@ public class ConfigMachineTest {
         assertThat(configOptional.get().getElement("key1").get())
                 .isEqualToComparingFieldByField(ConfigElement.of(
                         "classpath:restx/common/config.properties", "Doc 1", "key1", "val1"));
+    }
+
+    @Test
+    public void should_override_loaded_configs_from_loader() throws Exception {
+        overrideComponents().set("key1", "foo");
+
+        Factory factory = Factory.builder()
+                .addLocalMachines(threadLocal())
+                .addFromServiceLoader()
+                .build();
+
+        Optional<RestxConfig> configOptional = factory.queryByClass(RestxConfig.class).findOneAsComponent();
+
+        assertThat(configOptional.isPresent()).isTrue();
+        assertThat(configOptional.get().getString("key1")).isEqualTo(Optional.of("foo"));
     }
 
     @Test
